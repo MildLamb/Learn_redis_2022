@@ -38,3 +38,16 @@ OK
 - dbsize ：查看当前数据库的key的数量
 - flushdb ：清空当前库
 - flushall ：清空所有库
+
+```bash
+127.0.0.1:6379> dbsize
+(integer) 0
+127.0.0.1:6379> set name mildlamb
+OK
+127.0.0.1:6379> dbsize
+(integer) 1
+127.0.0.1:6379> flushdb
+OK
+127.0.0.1:6379> dbsize
+(integer) 0
+```
