@@ -115,3 +115,79 @@ public class JedisDemo1 {
 }
 
 ```
+
+# 验证码案例
+```bash
+public class PhoneCode {
+    public static void main(String[] args) {
+        verifyCode("18569504803");
+//        checkCode("18569504803","229429");
+    }
+
+    // 验证码校验
+    public static void checkCode(String phone,String code){
+        // 从redis中获取手机对应的验证码
+        Jedis jedis = new Jedis("43.142.97.59",6379);
+        // 验证码 key
+        String codeKey = "VerifyCode:" + phone + ":Code";
+        String redisCode = jedis.get(codeKey);
+        // 判断
+        if (code.equals(redisCode)){
+            System.out.println("验证成功");
+        } else {
+            System.out.println("验证失败");
+        }
+
+    }
+
+
+    // 每个手机每天只能发送三次，验证码放到redis中，设置过期时间
+    // 验证码存储在redis中，120秒过期时间
+    public static void verifyCode(String phone){
+        Jedis jedis = new Jedis("43.142.97.59",6379);
+
+        // 拼接 key
+        // 手机发送次数的key
+        String countKey = "VerifyCode:" + phone +":Count";
+        // 验证码 key
+        String codeKey = "VerifyCode:" + phone + ":Code";
+
+        String count = jedis.get(countKey);
+        System.out.println(count);
+        if (count == null){
+            // 如果count为null说明是第一次发送
+            jedis.setex(countKey,(long)24*60*60,"1");
+        } else if (Integer.parseInt(count) <= 2) {
+            // 发送次数 + 1
+            jedis.incr(countKey);
+        } else if (Integer.parseInt(count) > 2) {
+            System.out.println("今天发送次数已超过3次");
+            jedis.close();
+            return;
+        }
+
+
+        // 将生成的验证码发送到redis中
+        String vcode = getCode();
+        jedis.setex(codeKey,(long)120,vcode);
+        jedis.close();
+
+    }
+
+
+
+
+
+
+    // 生成6位数字验证码
+    public static String getCode(){
+        Random random = new Random();
+        String code = "";
+        for(int i=0;i<6;i++){
+            int rand = random.nextInt(10);
+            code += rand;
+        }
+        return code;
+    }
+}
+```
