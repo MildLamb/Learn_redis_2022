@@ -46,6 +46,7 @@ public class JedisSentinelPoolUtil {
             poolConfig.setBlockWhenExhausted(true);   // 连接耗尽时是否等待
             poolConfig.setTestOnBorrow(true);    // 获取连接时进行一下测试 ping
             
+            // myredis 是哨兵监控的名称
             jedisSentinelPool = new JedisSentinelPool("myredis",sentinelSet,poolConfig);
             return jedisSentinelPool.getResource();
         } else {
