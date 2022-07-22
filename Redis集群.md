@@ -43,3 +43,59 @@ OK
 127.0.0.1:7000> config rewrite 
 OK
 ```
+
+- 成功的样子
+```bash
+[root@VM-4-16-centos src]# redis-cli --cluster create --cluster-replicas 1 127.0.0.1:6379 127.0.0.1:6380 127.0.0.1:6381 127.0.0.1:6389 127.0.0.1:6390 127.0.0.1:6391
+>>> Performing hash slots allocation on 6 nodes...
+Master[0] -> Slots 0 - 5460
+Master[1] -> Slots 5461 - 10922
+Master[2] -> Slots 10923 - 16383
+Adding replica 127.0.0.1:6390 to 127.0.0.1:6379
+Adding replica 127.0.0.1:6391 to 127.0.0.1:6380
+Adding replica 127.0.0.1:6389 to 127.0.0.1:6381
+>>> Trying to optimize slaves allocation for anti-affinity
+[WARNING] Some slaves are in the same host as their master
+M: 0d86a7f9ac52d0a60729b9dcfbf31c53301005d6 127.0.0.1:6379
+   slots:[0-5460] (5461 slots) master
+M: e2b07205de9f13ce5cf040052389521d217a7d1b 127.0.0.1:6380
+   slots:[5461-10922] (5462 slots) master
+M: 799a62f6550f9460572f9f69ce2c7c65081d3598 127.0.0.1:6381
+   slots:[10923-16383] (5461 slots) master
+S: 227c40bbe61e836c63612485dba8f45e1fb6f391 127.0.0.1:6389
+   replicates 0d86a7f9ac52d0a60729b9dcfbf31c53301005d6
+S: 1ad085c71e0e8e2662ddf0cd864eb4d4c4a44365 127.0.0.1:6390
+   replicates e2b07205de9f13ce5cf040052389521d217a7d1b
+S: c4164dd02421d33f5c1f2a2270508914d3cf66fa 127.0.0.1:6391
+   replicates 799a62f6550f9460572f9f69ce2c7c65081d3598
+Can I set the above configuration? (type 'yes' to accept): yes
+>>> Nodes configuration updated
+>>> Assign a different config epoch to each node
+>>> Sending CLUSTER MEET messages to join the cluster
+Waiting for the cluster to join
+.
+>>> Performing Cluster Check (using node 127.0.0.1:6379)
+M: 0d86a7f9ac52d0a60729b9dcfbf31c53301005d6 127.0.0.1:6379
+   slots:[0-5460] (5461 slots) master
+   1 additional replica(s)
+S: c4164dd02421d33f5c1f2a2270508914d3cf66fa 127.0.0.1:6391
+   slots: (0 slots) slave
+   replicates 799a62f6550f9460572f9f69ce2c7c65081d3598
+M: e2b07205de9f13ce5cf040052389521d217a7d1b 127.0.0.1:6380
+   slots:[5461-10922] (5462 slots) master
+   1 additional replica(s)
+S: 1ad085c71e0e8e2662ddf0cd864eb4d4c4a44365 127.0.0.1:6390
+   slots: (0 slots) slave
+   replicates e2b07205de9f13ce5cf040052389521d217a7d1b
+S: 227c40bbe61e836c63612485dba8f45e1fb6f391 127.0.0.1:6389
+   slots: (0 slots) slave
+   replicates 0d86a7f9ac52d0a60729b9dcfbf31c53301005d6
+M: 799a62f6550f9460572f9f69ce2c7c65081d3598 127.0.0.1:6381
+   slots:[10923-16383] (5461 slots) master
+   1 additional replica(s)
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+[root@VM-4-16-centos src]# 
+```
