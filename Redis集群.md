@@ -3,7 +3,7 @@
 - Redis集群通过分区(partition)来提供一定程度的可用性(availability);即使集群中有一部分节点失效或者无法通讯，  
   集群也可以继续处理命令请求
   
-## 模拟Redis集群搭建
+## 模拟Redis集群搭建 （配置集群前，先不要设置密码，配置完成后再设置）
 - 编写6个实例 redis6379.conf/... 等6个redis配置文件
   - 开启daemonize yes
   - pid 文件名字
@@ -17,9 +17,9 @@
 
 - 编写好配置文件后，启动这6个服务
 - 将六个节点合成一个集群
-  - 需要在redis安装目录的src目录下执行，下列命令
+  - 需要在redis安装目录的src目录下执行，下列命令 (为了安全，我使用本地端口，远程使用ip+端口的形式)
 ```bash
-redis-cli --cluster create --cluster-replicas 1 127.0.0.1:6379 127.0.0.1:6380 127.0.0.1:6381 127.0.0.1:6389 127.0.0.1:6390 127.0.0.1:6391
+redis-cli --cluster create --cluster-replicas 1 43.142.97.59:6379 43.142.97.59:6380 43.142.97.59:6381 43.142.97.59:6389 43.142.97.59:6390 43.142.97.59:6391
 ```
 ## 集群密码设置
 1. 如果是使用redis-trib.rb工具构建集群，集群构建完成前不要配置密码，集群构建完毕再通过config set + config rewrite命令逐个机器设置密码
@@ -44,7 +44,7 @@ OK
 OK
 ```
 
-- 成功的样子
+## 成功的话就是这样
 ```bash
 [root@VM-4-16-centos src]# redis-cli --cluster create --cluster-replicas 1 127.0.0.1:6379 127.0.0.1:6380 127.0.0.1:6381 127.0.0.1:6389 127.0.0.1:6390 127.0.0.1:6391
 >>> Performing hash slots allocation on 6 nodes...
@@ -98,4 +98,38 @@ M: 799a62f6550f9460572f9f69ce2c7c65081d3598 127.0.0.1:6381
 >>> Check slots coverage...
 [OK] All 16384 slots covered.
 [root@VM-4-16-centos src]# 
+```
+
+- 使用集群方式连接
+```bash
+[root@VM-4-16-centos bin]# redis-cli -c -p 6380
+127.0.0.1:6380> 
+```
+
+- 删除集群
+```bash
+#直接杀死所有进程（直接暴力）
+kill -9 $(pidof redis-server)
+
+#停止所有节点（这个关闭也行，不暴力）
+redis-cli -h 172.17.97.2 -p 7001 shutdown
+redis-cli -h 172.17.97.2 -p 7002 shutdown
+redis-cli -h 172.17.97.2 -p 7003 shutdown
+redis-cli -h 172.17.97.2 -p 7004 shutdown
+redis-cli -h 172.17.97.2 -p 7005 shutdown
+redis-cli -h 172.17.97.2 -p 7006 shutdown
+
+#删除节点下面的所有相关文件（这个是批量删除的操作）
+rm -f ./*/nodes-*.conf ./*/appendonly.aof ./*/dump.rdb
+```
+
+# 搭建Redis集群遇到的问题：Waiting for the cluster to join~~~  (使用云服务器搭建)
+- 使用云服务器的话，要开启云服务器对应端口和linux防火墙对应端口
+- 集群总线
+```text
+每个Redis集群中的节点都需要打开两个TCP连接。一个连接用于正常的给Client提供服务，比如6379，还有一个额外的端口（通过在这个端口号上加10000）作为数据端口，例如：redis的端口为6379，那么另外一个需要开通的端口是：6379 + 10000， 即需要开启 16379。16379端口用于集群总线，这是一个用二进制协议的点对点通信信道。这个集群总线（Cluster bus）用于节点的失败侦测、配置更新、故障转移授权，等等。
+```
+- 解决方案
+```text
+只需要将开启Redis端口对应的 集群总线端口即可。例如： 6379 + 10000 = 16379。所以开放每个集群节点的客户端端口和集群总线端口才能成功创建集群！
 ```
