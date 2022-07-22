@@ -19,7 +19,7 @@
 - 将六个节点合成一个集群
   - 需要在redis安装目录的src目录下执行，下列命令
 ```bash
-redis-cli --cluster create --cluster-replicas 1 10.0.4.16:6379 10.0.4.16:6380 10.0.4.16:6381 10.0.4.16:6389 10.0.4.16:6390 10.0.4.16:6391
+redis-cli --cluster create --cluster-replicas 1 43.142.97.59:6379 43.142.97.59:6380 43.142.97.59:6381 43.142.97.59:6389 43.142.97.59:6390 43.142.97.59:6391
 ```
 ## 集群密码设置
 1. 如果是使用redis-trib.rb工具构建集群，集群构建完成前不要配置密码，集群构建完毕再通过config set + config rewrite命令逐个机器设置密码
@@ -34,11 +34,11 @@ requirepass 1234
 方式二：进入各个实例通过config set设置
 ```bash
 [root@iZj6c7eeosj2t5vjw8rf4xZ redis_cluster]# redis-cli -c -p 7000
-127.0.0.1:7000> config set masterauth 1234
+127.0.0.1:7000> config set masterauth mildlambW2kindredwildwolfW2snowgnar
 OK 
-127.0.0.1:7000> config set requirepass 1234
+127.0.0.1:7000> config set requirepass mildlambW2kindredwildwolfW2snowgnar
 OK 
-127.0.0.1:7000> auth 1234
+127.0.0.1:7000> auth mildlambW2kindredwildwolfW2snowgnar
 OK 
 127.0.0.1:7000> config rewrite 
 OK
