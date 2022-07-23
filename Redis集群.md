@@ -179,3 +179,13 @@ OK
 ## 如果某一段插槽的主从节点都宕机了，redis服务能否继续?
 - 如果某一段插槽主从都挂了，而cluster-require-full-coverage 设置为 yes ，那么整个集群都挂了，如果设置为 no ，则是对应的插槽段无法提供服务
 - redis.conf 中的参数 cluster-require-full-coverage
+
+  
+## Redis集群提供了以下好处
+- 实现扩容
+- 分摊压力
+- 无中心配置相对简单
+  
+## Redis集群的不足
+- 多键操作是不被支持的
+- 多键的Redis事务不被支持的。lua脚本不被支持
