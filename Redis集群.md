@@ -17,7 +17,7 @@
 
 - 编写好配置文件后，启动这6个服务
 - 将六个节点合成一个集群
-  - 需要在redis安装目录的src目录下执行，下列命令 (为了安全，我使用本地端口，远程使用ip+端口的形式)
+  - 需要在redis安装目录的src目录下执行，下列命令 
 ```bash
 redis-cli --cluster create --cluster-replicas 1 43.142.97.59:6379 43.142.97.59:6380 43.142.97.59:6381 43.142.97.59:6389 43.142.97.59:6390 43.142.97.59:6391
 ```
@@ -139,3 +139,43 @@ rm -f ./*/nodes-*.conf ./*/appendonly.aof ./*/dump.rdb
 只需要将开启Redis端口对应的 集群总线端口即可。例如： 6379 + 10000 = 16379。
 所以开放每个集群节点的客户端端口和集群总线端口才能成功创建集群！
 ```
+
+## 什么是slots
+- 一个Redis集群包含16384个插槽(hash slot)，数据库中的每个键都属于16384个插槽中的其中一个
+- 集群使用公式CRC16(key)%16384来计算键key属于哪个插槽，其中CRC16(key)语句用于计算键key的CRC16校验和
+- 集群中的每个节点负责处理一部分插槽。
+
+
+## 集群操作
+- 添加单个键时，会计算插槽值，然后需要根据插槽值到对应的集群中设置值
+- 不在一个插槽下的键值，是不能使用mset，mget等多键操作的
+```bash
+43.142.97.59:6380> mset k1 v1 name kindred
+(error) CROSSSLOT Keys in request don't hash to the same slot
+```
+- 可以通过{}来定义组的概念，从而使key中{}内相同内容的键值放到一个slot中
+```bash
+43.142.97.59:6380> mset name1{role} kindred name2{role} gnar name3{role} neeko
+OK
+```
+- 查询集群中的值  CLUSTER GETKEYSINSLOT <slot> <count> 返回count个slot槽中的键
+```bash
+# 查询键对应的插槽值
+43.142.97.59:6380> cluster keyslot name
+(integer) 5798
+# 查询插槽内 键的数量 只能查主机自己插槽范围内的
+43.142.97.59:6380> cluster countkeysinslot 5798
+(integer) 1
+# 查询role组的插槽值
+43.142.97.59:6380> cluster keyslot role
+(integer) 10755
+# 返回 5 个 指定插槽值上的键
+43.142.97.59:6380> cluster getkeysinslot 10755 5
+1) "name1{role}"
+2) "name2{role}"
+3) "name3{role}"
+```
+  
+## 如果某一段插槽的主从节点都宕机了，redis服务能否继续?
+- 如果某一段插槽主从都挂了，而cluster-require-full-coverage 设置为 yes ，那么整个集群都挂了，如果设置为 no ，则是对应的插槽段无法提供服务
+- redis.conf 中的参数 cluster-require-full-coverage
